@@ -15,7 +15,6 @@ System.out.println("Enter the Logical address(IP):");
 String str1=in.readLine();
 dout.writeBytes(str1+'\n';
 String str=din.readLine();
-35
 System.out.println("The Physical Address is: "+str);
 clsct.close();
 }
