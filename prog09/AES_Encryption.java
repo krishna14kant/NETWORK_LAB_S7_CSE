@@ -1,78 +1,75 @@
-package com.javainterviewpoint;
-
-import java.security.SecureRandom;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
-
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class AES_Encryption
+public class AES {
+
+    private static SecretKeySpec secretKey;
+    private static byte[] key;
+
+    public static void setKey(String myKey)
+    {
+        MessageDigest sha = null;
+        try {
+            key = myKey.getBytes("UTF-8");
+            sha = MessageDigest.getInstance("SHA-1");
+            key = sha.digest(key);
+            key = Arrays.copyOf(key, 16);
+            secretKey = new SecretKeySpec(key, "AES");
+        }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String encrypt(String strToEncrypt, String secret)
+    {
+        try
+        {
+            setKey(secret);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error while encrypting: " + e.toString());
+        }
+        return null;
+    }
+
+    public static String decrypt(String strToDecrypt, String secret)
+    {
+        try
+        {
+            setKey(secret);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error while decrypting: " + e.toString());
+        }
+        return null;
+    }
+    public static void main(String[] args)
 {
-    static String plainText = "I am krishna kant singh from cse ";
-    
-    public static void main(String[] args) throws Exception
-    {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        keyGenerator.init(256);
+    final String secretKey = "ssshhhhhhhhhhh!!!!";
 
-        // Generate Key
-        SecretKey key = keyGenerator.generateKey();
+    String originalString = "HelloWorld";
+    String encryptedString = AES.encrypt(originalString, secretKey) ;
+    String decryptedString = AES.decrypt(encryptedString, secretKey) ;
 
-        // Generating IV.
-        byte[] IV = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(IV);
-        
-        System.out.println("Original Text  : "+plainText);
-        
-        byte[] cipherText = encrypt(plainText.getBytes(),key, IV);
-        System.out.println("Encrypted Text : "+Base64.getEncoder().encodeToString(cipherText));
-        
-        String decryptedText = decrypt(cipherText,key, IV);
-        System.out.println("DeCrypted Text : "+decryptedText);
-        
-    }
-    
-    public static byte[] encrypt (byte[] plaintext,SecretKey key,byte[] IV ) throws Exception
-    {
-        //Get Cipher Instance
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        
-        //Create SecretKeySpec
-        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-        
-        //Create IvParameterSpec
-        IvParameterSpec ivSpec = new IvParameterSpec(IV);
-        
-        //Initialize Cipher for ENCRYPT_MODE
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-        
-        //Perform Encryption
-        byte[] cipherText = cipher.doFinal(plaintext);
-        
-        return cipherText;
-    }
-    
-    public static String decrypt (byte[] cipherText, SecretKey key,byte[] IV) throws Exception
-    {
-        //Get Cipher Instance
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        
-        //Create SecretKeySpec
-        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-        
-        //Create IvParameterSpec
-        IvParameterSpec ivSpec = new IvParameterSpec(IV);
-        
-        //Initialize Cipher for DECRYPT_MODE
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-        
-        //Perform Decryption
-        byte[] decryptedText = cipher.doFinal(cipherText);
-        
-        return new String(decryptedText);
-    }
+    System.out.println(originalString);
+    System.out.println(encryptedString);
+    System.out.println(decryptedString);
+}
 }
